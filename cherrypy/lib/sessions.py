@@ -553,7 +553,9 @@ class FileSession(Session):
     def release_lock(self, path=None):
         """Release the lock on the currently-loaded session data."""
         self.lock.release()
-        self.lock.remove()
+        # Leave lock file hanging around to work around a race. See
+        # <https://github.com/cherrypy/cherrypy/issues/1391>.
+        # self.lock.remove()
         self.locked = False
 
     def clean_up(self):
