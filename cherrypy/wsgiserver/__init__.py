@@ -800,6 +800,20 @@ class HTTPRequest(object):
                 x = sys.exc_info()[1]
                 if x.args[0] not in socket_errors_to_ignore:
                     raise
+
+        # Work around broken PS_DEVICEFEATURES value in the cookie.
+        #
+        # The PS_DEVICEFEATURES key might be set to a value containing spaces
+        # (which is invalid according to RFCs) and Python's
+        # http.cookie.SimpleCookie then concludes that the whole cookie is
+        # invalid and we lose our session ID.
+        cookie = self.inheaders.get(b"Cookie")
+        if cookie:
+            self.inheaders[b"Cookie"] = re.sub(
+                b"PS_DEVICEFEATURES=.*?; |; PS_DEVICEFEATURES=[^;]*$",
+                b"",
+                cookie)
+
         return True
 
     def parse_request_uri(self, uri):
